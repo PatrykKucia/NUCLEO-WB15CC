@@ -41,3 +41,8 @@
 ![alt text](image-7.png)
 ---
 
+## Functions
+
+HSEM - Hardware semaphore wich is used to synchronize access to shared resources between CM0+ and CM4 cores.
+
+
