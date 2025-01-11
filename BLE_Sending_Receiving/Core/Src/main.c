@@ -129,10 +129,10 @@ int main(void)
   BSP_LED_Init(LED_GREEN);
   BSP_LED_Init(LED_RED);
 
-  /* Initialize USER push-button, will be used to trigger an interrupt each time it's pressed.*/
-  BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
-  BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_EXTI);
-  BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_EXTI);
+  /* Initialize User push-button without interrupt mode. */
+  BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_GPIO);
+  BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_GPIO);
+  BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_GPIO);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
