@@ -78,18 +78,25 @@ uint16_t Connection_Handle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* mySvc */
-static void Custom_Mycharnotify_Update_Char(void);
-static void Custom_Mycharnotify_Send_Notification(void);
+void Custom_Mycharnotify_Update_Char(void);
+void Custom_Mycharnotify_Send_Notification(void);
 
 /* USER CODE BEGIN PFP */
 void Task(void)
 {
-	if(!HAL_GPIO_ReadPin(BUTTON_SW2_GPIO_PORT, BUTTON_SW2_PIN))
-	{
-		UpdateCharData[0] ^= 0x1;
-		Custom_Mycharnotify_Update_Char();
-	}
-	UTIL_SEQ_SetTask(1 << CFG_TASK, CFG_SCH_PRIO_0);
+//	if(!HAL_GPIO_ReadPin(BUTTON_SW2_GPIO_PORT, BUTTON_SW2_PIN))
+//	{
+//		UpdateCharData[0] ^= 0x1;
+//		Custom_Mycharnotify_Update_Char();
+//	}
+//	UTIL_SEQ_SetTask(1 << CFG_TASK, CFG_SCH_PRIO_0);
+}
+
+
+void Task_Timer_Second(void)
+{
+	Custom_Mycharnotify_Update_Char();
+	UTIL_SEQ_SetTask(1 << CFG_TASK_TIMER_SECOND_ID, CFG_SCH_PRIO_0);
 }
 /* USER CODE END PFP */
 
@@ -204,6 +211,13 @@ __USED void Custom_Mycharnotify_Update_Char(void) /* Property Read */
 
   /* USER CODE BEGIN Mycharnotify_UC_1*/
   updateflag = 1;
+  uint32_t current_time_seconds = HAL_GetTick() / 1000;
+
+  // Przekształć czas na bajty i zapisz w UpdateCharData
+  UpdateCharData[0] = (uint8_t)(current_time_seconds & 0xFF);        // Bajt młodszy
+  UpdateCharData[1] = (uint8_t)((current_time_seconds >> 8) & 0xFF); // Bajt starszy
+  UpdateCharData[2] = (uint8_t)((current_time_seconds >> 16) & 0xFF);
+  UpdateCharData[3] = (uint8_t)((current_time_seconds >> 24) & 0xFF);
   /* USER CODE END Mycharnotify_UC_1*/
 
   if (updateflag != 0)

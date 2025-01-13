@@ -268,6 +268,10 @@ void APP_BLE_Init(void)
   /* USER CODE BEGIN APP_BLE_Init_1 */
 UTIL_SEQ_RegTask(1<<CFG_TASK, UTIL_SEQ_RFU, Task);
 UTIL_SEQ_SetTask(1<<CFG_TASK, CFG_SCH_PRIO_0);
+
+UTIL_SEQ_RegTask(1 << CFG_TASK_TIMER_SECOND_ID, UTIL_SEQ_RFU, Task_Timer_Second);
+UTIL_SEQ_SetTask(1 << CFG_TASK_TIMER_SECOND_ID, CFG_SCH_PRIO_0);
+
   /* USER CODE END APP_BLE_Init_1 */
   SHCI_C2_Ble_Init_Cmd_Packet_t ble_init_cmd_packet =
   {
