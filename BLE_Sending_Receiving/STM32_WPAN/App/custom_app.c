@@ -95,6 +95,7 @@ void Task(void)
 
 void Task_Timer_Second(void)
 {
+	//Custom_Mycharnotify_Send_Notification();
 	Custom_Mycharnotify_Update_Char();
 	UTIL_SEQ_SetTask(1 << CFG_TASK_TIMER_SECOND_ID, CFG_SCH_PRIO_0);
 }

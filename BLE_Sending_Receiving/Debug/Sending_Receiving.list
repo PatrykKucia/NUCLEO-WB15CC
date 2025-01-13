@@ -22413,6 +22413,7 @@ void Task_Timer_Second(void)
 {
  8008264:	b580      	push	{r7, lr}
  8008266:	af00      	add	r7, sp, #0
+	//Custom_Mycharnotify_Send_Notification();
 	Custom_Mycharnotify_Update_Char();
  8008268:	f000 f83e 	bl	80082e8 <Custom_Mycharnotify_Update_Char>
 	UTIL_SEQ_SetTask(1 << CFG_TASK_TIMER_SECOND_ID, CFG_SCH_PRIO_0);
