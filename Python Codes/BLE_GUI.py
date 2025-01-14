@@ -1,11 +1,14 @@
 import asyncio
 import logging
+import threading
 from bleak import BleakClient
 import struct
 import tkinter as tk
 from tkinter import ttk
 from tkinter import PhotoImage
 from PIL import Image, ImageTk  # Use Pillow for image resizin
+import queue
+
 
 root = tk.Tk()
 root.title('BLE GUI')
@@ -19,7 +22,8 @@ style = ttk.Style()
 style.configure('SmallFont.TButton', font=('Helvetica', 18))
 
 led_states = [False, False, False, False]
-
+notification_queue = queue.Queue()
+client = None  # Globalny klient BLE
 
 LED_1_orginal_image = Image.open("LED.png")
 LED_1_orginal_image= LED_1_orginal_image.resize((120, 200))  # Resize to 150x150 pixels
@@ -66,17 +70,22 @@ uuid_list = [
     "00000000-8e22-4541-9d4c-21edae82ed19",  # przykładowy UUID
 ]
 
+# connection status
+is_connected = False
+
 # Functions for buttons
 def Connect():
-       update_status(f"connecting with device {NUCLEO_ADDRESS}...")
+    asyncio.run_coroutine_threadsafe(connect_to_device(), loop)
 
 def Disconnect():
-       update_status(f"disconnecting with device {NUCLEO_ADDRESS}...")
+    asyncio.run_coroutine_threadsafe(disconnect_from_device(), loop)
 
 def LED_1_Toggle():
     led_states[0] = not led_states[0]
     image_label_LED_1.config(image=LED_ON_1_image if led_states[0] else LED_1_image)
     update_status("LED 1 toggled to ON" if led_states[0] else "LED 1 toggled to OFF")
+    data_to_send = b"LED 1 ON"
+    asyncio.run(send_data_to_nucleo(data_to_send))
 
 def LED_2_Toggle():
     led_states[1] = not led_states[1]
@@ -117,6 +126,87 @@ def update_notify_uuid():
         update_status(f"NOTIFY_CHARACTERISTIC_UUID zmieniony na {NOTIFY_CHARACTERISTIC_UUID}")
     else:
         update_status("Wybierz prawidłowy UUID!")
+
+# Funkcja do połączenia i wysyłania danych
+async def send_data_to_nucleo(data_to_send):
+    try:
+            if client.is_connected:
+                print(f"Wysyłanie danych: {data_to_send}")
+                await client.write_gatt_char(NOTIFY_CHARACTERISTIC_UUID, data_to_send)
+                print("Dane zostały wysłane!")
+    except Exception as e:
+        print(f"Błąd podczas wysyłania danych: {e}")
+
+async def connect_to_device():
+    global is_connected, client
+    try:
+        client = BleakClient(NUCLEO_ADDRESS)
+        await client.connect()
+        if client.is_connected:
+            is_connected = True
+            update_status("Connected to device.")
+            if NOTIFY_CHARACTERISTIC_UUID == uuid_list[1]:
+                update_status("Controling LEDs")
+            elif NOTIFY_CHARACTERISTIC_UUID == uuid_list[0]:
+                await safe_subscribe(client)  # Bezpieczne wznawianie subskrypcji
+        else:
+            update_status("Connection failed.")
+    except Exception as e:
+        update_status(f"Connection error: {e}")
+
+async def disconnect_from_device():
+    global is_connected, client
+    if client and client.is_connected:
+        try:
+            await client.stop_notify(NOTIFY_CHARACTERISTIC_UUID)
+            await client.disconnect()
+            is_connected = False
+            update_status("Disconnected from STM32 NUCLEO.")
+        except Exception as e:
+            update_status(f"Error during disconnect: {e}")
+    else:
+        update_status("Not connected to any device.")
+
+def notification_handler(sender, data):
+    notification_queue.put((sender, data))
+
+def process_notifications():
+    while not notification_queue.empty():
+        sender, data = notification_queue.get()
+        # Przetwarzaj dane szybko lub loguj je
+        update_status(f"Data received from {sender}: {data}")
+    root.after(100, process_notifications)
+
+
+
+def start_asyncio_loop():
+    global loop
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_forever()
+
+# Start asyncio in a background thread
+loop = asyncio.new_event_loop()
+
+asyncio.set_event_loop(loop)# Uruchom asyncio w tle
+asyncio_thread = threading.Thread(target=start_asyncio_loop, daemon=True)
+asyncio_thread.start()
+# Call process_notifications periodically in the main Tkinter loop
+
+root.after(100, process_notifications)
+
+def monitor_asyncio():
+    if not loop.is_running():
+        update_status("Asyncio loop is not running!")
+    else:
+        update_status("Asyncio loop is running fine.")
+    root.after(5000, monitor_asyncio)  # Sprawdzaj co 5 sekund
+
+root.after(5000, monitor_asyncio)
+
+asyncio_thread = threading.Thread(target=start_asyncio_loop, daemon=True)
+asyncio_thread.start()
+
 
 button_frame = ttk.Frame(root)
 button_frame.grid(row=0, column=0, pady=(10, 10), padx=(10, 5), sticky='nw')
@@ -183,4 +273,12 @@ update_uuid_button = ttk.Button(address_frame, text="Zmień UUID", command=updat
 update_uuid_button.grid(row=1, column=2, padx=5, pady=5)
 update_status("Waiting for connection...")
 
+async def safe_subscribe(client):
+    try:
+        await client.start_notify(NOTIFY_CHARACTERISTIC_UUID, notification_handler)
+        update_status("Subscribed to notifications.")
+    except Exception as e:
+        update_status(f"Subscription error: {e}")
+        await asyncio.sleep(1)  # Czekaj i spróbuj ponownie
+        await safe_subscribe(client)
 root.mainloop()
