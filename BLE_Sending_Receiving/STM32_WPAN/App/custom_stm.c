@@ -65,8 +65,8 @@ extern uint16_t Connection_Handle;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-uint16_t SizeMycharwrite = 76;
-uint16_t SizeMycharnotify = 20;
+uint16_t SizeMycharwrite = 7;
+uint16_t SizeMycharnotify = 7;
 
 /**
  * START of Section BLE_DRIVER_CONTEXT
@@ -199,8 +199,19 @@ static SVCCTL_EvtAckStatus_t Custom_STM_Event_Handler(void *Event)
               printf("%02X ", bluetooth_data[i]); // Heksadecymalny format
             }
             printf("\n");
+            if(bluetooth_data[4]==1)
+            {
+            	HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
+            }
+            else if(bluetooth_data[4]==2)
+				{
+					HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
+				}
+            else if(bluetooth_data[4]==3)
+                {
+                	HAL_GPIO_TogglePin(LED3_GPIO_PORT, LED3_PIN);
+                }
 
-            HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
             /* USER CODE END CUSTOM_STM_Service_1_Char_1_ACI_GATT_ATTRIBUTE_MODIFIED_VSEVT_CODE */
           } /* if (attribute_modified->Attr_Handle == (CustomContext.CustomMycharwriteHdle + CHARACTERISTIC_VALUE_ATTRIBUTE_OFFSET))*/
           /* USER CODE BEGIN EVT_BLUE_GATT_ATTRIBUTE_MODIFIED_END */

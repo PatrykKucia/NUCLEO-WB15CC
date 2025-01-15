@@ -30,6 +30,23 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#ifndef BLE_PAYLOAD_H
+#define BLE_PAYLOAD_H
+
+#include <stdint.h>
+
+// Definicja struktury BLE_Payload
+typedef struct{
+    uint8_t button_1_state;
+    uint8_t button_2_state;
+    uint8_t button_3_state;
+    uint32_t current_time;   // Czas w sekundach
+} BLE_Payload;
+
+// Deklaracja globalnej zmiennej
+extern BLE_Payload payload;
+
+#endif // BLE_PAYLOAD_H
 
 /* USER CODE END Includes */
 

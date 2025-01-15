@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#include "custom_app.h"
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -133,10 +133,10 @@ int main(void)
   BSP_LED_Init(LED_GREEN);
   BSP_LED_Init(LED_RED);
 
-  /* Initialize User push-button without interrupt mode. */
-  BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_GPIO);
-  BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_GPIO);
-  BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_GPIO);
+  /* Initialize USER push-button, will be used to trigger an interrupt each time it's pressed.*/
+  BSP_PB_Init(BUTTON_SW1, BUTTON_MODE_EXTI);
+  BSP_PB_Init(BUTTON_SW2, BUTTON_MODE_EXTI);
+  BSP_PB_Init(BUTTON_SW3, BUTTON_MODE_EXTI);
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -228,6 +228,7 @@ void PeriphCommonClock_Config(void)
     Error_Handler();
   }
   /* USER CODE BEGIN Smps */
+
 
   /* USER CODE END Smps */
 }
@@ -436,11 +437,41 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+//{
+//    if (htim->Instance == TIM1) // Gdzie TIMx to timer skonfigurowany na 100 ms
+//    {
+//    	UTIL_SEQ_SetTask(1 << CFG_TASK_TIMER_SECOND_ID, CFG_SCH_PRIO_0);
+//    }
+//}
+void BSP_PB_Callback(Button_TypeDef Button)
 {
-    if (htim->Instance == TIM1) // Gdzie TIMx to timer skonfigurowany na 100 ms
+    if (Button == BUTTON_SW1)
     {
-    	UTIL_SEQ_SetTask(1 << CFG_TASK_TIMER_SECOND_ID, CFG_SCH_PRIO_0);
+        // Obsługuje przycisk SW1
+    	if(payload.button_1_state != 1)
+        	payload.button_1_state = 1;  // Ustawienie stanu przycisku SW1
+    	else
+    		payload.button_1_state = 0;  // Ustawienie stanu przycisku SW1
+        //Custom_Mycharnotify_Update_Char();  // Wyślij dane
+    }
+    else if (Button == BUTTON_SW2)
+    {
+        // Obsługuje przycisk SW2
+    	if(payload.button_2_state != 1)
+        	payload.button_2_state = 1;  // Ustawienie stanu przycisku SW2
+    	else
+    		payload.button_2_state = 0;  // Ustawienie stanu przycisku SW1
+        //Custom_Mycharnotify_Update_Char();  // Wyślij dane
+    }
+    else if (Button == BUTTON_SW3)
+    {
+        // Obsługuje przycisk SW3
+    	if(payload.button_3_state != 1)
+        	payload.button_3_state = 1; // Ustawienie stanu przycisku SW2
+    	else
+    		payload.button_3_state = 0;  // Ustawienie stanu przycisku SW1
+        //Custom_Mycharnotify_Update_Char();  // Wyślij dane
     }
 }
 /* USER CODE END 4 */

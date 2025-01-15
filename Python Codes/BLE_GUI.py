@@ -8,6 +8,7 @@ from tkinter import ttk
 from tkinter import PhotoImage
 from PIL import Image, ImageTk  # Use Pillow for image resizin
 import queue
+import struct
 
 
 root = tk.Tk()
@@ -38,6 +39,12 @@ led_states = [False, False, False, False]
 notification_queue = queue.Queue()
 # global client 
 client = None  
+# global variables for buttons
+button_1_state = 0
+button_2_state = 0
+button_3_state = 0
+current_time = 0
+
 
 #adress and UUID
 NUCLEO_ADDRESS = "00:80:E1:22:E5:13"
@@ -114,7 +121,8 @@ def update_status(message):
     status_textbox.config(state="normal")  # turn on editing
     status_textbox.insert("end", f"{message}\n")  # newline
     status_textbox.see("end")  # scroll to the end
-    status_textbox.config(state="disabled")  # turn off editing
+    status_textbox.config(state="disabled")  # turn off editinG
+    # Aktualizacja stanu przycisków
 
 # function to update status
 def update_BLE_DATA(message):
@@ -122,6 +130,9 @@ def update_BLE_DATA(message):
     BLE_data_textbox.insert("end", f"{message}\n")  # newline
     BLE_data_textbox.see("end")  # scroll to the end
     BLE_data_textbox.config(state="disabled")  # turn off editing
+    Button_1_state.config(text=f"Button 1: {'ON' if button_1_state == 1 else 'OFF'}")
+    Button_2_state.config(text=f"Button 2: {'ON' if button_2_state == 1 else 'OFF'}")
+    Button_3_state.config(text=f"Button 3: {'ON' if button_3_state == 1 else 'OFF'}")
 
 # Function to update BLE address
 def update_BLE_address():
@@ -199,13 +210,53 @@ async def disconnect_from_device():
 def notification_handler(sender, data):
     notification_queue.put((sender, data))
 
+def decode_ble_payload(data):
+    """
+    Dekoduje dane BLE na podstawie struktury BLE_Payload:
+    uint8_t button_state;
+    uint32_t current_time;
+    """
+    global button_1_state, button_2_state, button_3_state, current_time
+    # Rozmiar struktury BLE_Payload
+    expected_length = 7  # 1 bajt (button_state) + 4 bajty (current_time)
+    #print(f"data: {data}")
+    # Sprawdź, czy dane mają odpowiednią długość
+    if len(data) < expected_length:
+        print(f"Error: Received data too short ({len(data)} bytes, expected {expected_length} bytes)\n Data: {data}")
+        return None, None
+
+    # Skróć dane do oczekiwanej długości (jeśli za długie)
+    trimmed_data = data[:expected_length]
+
+    # Struktura C: 1 bajt (button_state) + 4 bajty (current_time)
+    format_string = "<B B B I"  # Little-endian: B (uint8_t), I (uint32_t)
+    try:
+        button_1_state, button_2_state, button_3_state, current_time = struct.unpack(format_string, trimmed_data)
+        return button_1_state, button_2_state, button_3_state, current_time
+    except struct.error as e:
+        print(f"Error decoding BLE payload: {e}")
+        return None, None
+
+
 # Function to process notifications
 def process_notifications():
     while not notification_queue.empty():
         sender, data = notification_queue.get()
-        update_BLE_DATA(f"Data received from {sender}: {data}")
+
+        # Dekoduj dane BLE
+        button_1_state, button_2_state, button_3_state, current_time = decode_ble_payload(data)
+        # Sprawdź, czy dane zostały poprawnie zdekodowane
+        # if current_time is not None:
+        #     # Wyświetl dane w czytelnej formie
+        #     update_BLE_DATA(
+        #       #  f"Data received from {sender}: Button 1 State={button_1_state},Button 2 State={button_2_state},Button 3 State={button_3_state}, Current Time={current_time} seconds"
+        #     )
+        # else:
+        #     update_BLE_DATA(f"Data received from {sender}: Invalid payload")
+        update_BLE_DATA(f"Data: {current_time}")
     root.after(100, process_notifications) # Call again after 100 ms
 
+   
 # Function to start asyncio loop
 def start_asyncio_loop():
     global loop
@@ -241,9 +292,21 @@ open_button=ttk.Button(button_frame, text='Connect', command=Connect,
                          style='BigFont.TButton', width=20)
 open_button.grid(row=0, column=0, padx=5, pady=5)
 
-open_button=ttk.Button(button_frame, text='Disconnect', command=Disconnect, 
+disconnect_button=ttk.Button(button_frame, text='Disconnect', command=Disconnect, 
                          style='BigFont.TButton', width=20)
-open_button.grid(row=0, column=1, padx=5, pady=5)
+disconnect_button.grid(row=0, column=1, padx=5, pady=5)
+
+Button_1_state = ttk.Label(button_frame, text="Button 1: OFF", font=('Helvetica', 12))
+Button_1_state.grid(row=1, column=0, columnspan=1, pady=0)
+
+Button_2_state = ttk.Label(button_frame, text="Button 2: OFF", font=('Helvetica', 12))
+Button_2_state.grid(row=1, column=1, columnspan=1, pady=0)
+
+Button_3_state = ttk.Label(button_frame, text="Button 3: OFF", font=('Helvetica', 12))
+Button_3_state.grid(row=2, column=0, columnspan=1, pady=0)
+
+Button_4_state = ttk.Label(button_frame, text="Button 4: OFF", font=('Helvetica', 12))
+Button_4_state.grid(row=2, column=1, columnspan=1, pady=0)
 
 #Buttons under the images 
 button_LED_1 = ttk.Button(root, text="Control LED 1", command=LED_1_Toggle)

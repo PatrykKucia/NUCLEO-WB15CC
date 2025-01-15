@@ -50,7 +50,7 @@ typedef struct
 
 /* Private defines ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+BLE_Payload payload = {0,0,0,0};
 /* USER CODE END PD */
 
 /* Private macros -------------------------------------------------------------*/
@@ -212,13 +212,13 @@ __USED void Custom_Mycharnotify_Update_Char(void) /* Property Read */
 
   /* USER CODE BEGIN Mycharnotify_UC_1*/
   updateflag = 1;
-  uint32_t current_time_seconds = HAL_GetTick() / 1000;
-
-  // Przekształć czas na bajty i zapisz w UpdateCharData
-  UpdateCharData[0] = (uint8_t)(current_time_seconds & 0xFF);        // Bajt młodszy
-  UpdateCharData[1] = (uint8_t)((current_time_seconds >> 8) & 0xFF); // Bajt starszy
-  UpdateCharData[2] = (uint8_t)((current_time_seconds >> 16) & 0xFF);
-  UpdateCharData[3] = (uint8_t)((current_time_seconds >> 24) & 0xFF);
+  payload.current_time = (HAL_GetTick() / 1000); // Aktualizacja pola current_time
+  //        Custom_STM_App_Update_Char(CUSTOM_STM_MYCHARNOTIFY, (uint8_t *)&payload);
+  memcpy(UpdateCharData, &payload, sizeof(payload));
+  UpdateCharData[3] = (uint8_t)(payload.current_time & 0xFF);
+  UpdateCharData[4] = (uint8_t)((payload.current_time >> 8) & 0xFF);
+  UpdateCharData[5] = (uint8_t)((payload.current_time >> 16) & 0xFF);
+  UpdateCharData[6] = (uint8_t)((payload.current_time >> 24) & 0xFF);
   /* USER CODE END Mycharnotify_UC_1*/
 
   if (updateflag != 0)
