@@ -11,6 +11,7 @@
 5. [Pinout](#Pinout)
 6. [Functions](#Functions)
 7. [Terminology and theory](#Terminology_and_theory)
+8. [Codes](#Codes)
 ---
 
 ## Schematic
@@ -50,7 +51,7 @@
 
 ## Terminology and theory
 HSEM - Hardware semaphore wich is used to synchronize access to shared resources between CM0+ and CM4 cores.
-
+ 
 IPCC - Interprocessor communication controller is used to exchange data between CM0+ and CM4 cores.
 
 GATT - Generic Attribute Profile is API for BLE communication.
@@ -71,5 +72,8 @@ GATT terminology:
 | Connections           | Features faster connection establishment, which is beneficial for applications requiring immediate response. | The connection establishment process can be more time-consuming compared to BLE. |
 | Number of Channels in the 2.4 GHz Band | Utilizes 40 channels with a bandwidth of 2 MHz. Three of them are used for advertising mode. | Utilizes 79 channels with a bandwidth of 1 MHz. 32 of these are used for advertising. |
 
-```
+---
 
+## Codes
+
+- BLE_TransparentMode - Example of BLE communication in transparent mode.
