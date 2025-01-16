@@ -27,6 +27,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -50,7 +51,11 @@ TIM_HandleTypeDef htim1;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-
+led_struct_t LED[] = {
+    {LED1_GPIO_PORT, LED1_PIN},
+    {LED2_GPIO_PORT, LED2_PIN},
+    {LED3_GPIO_PORT, LED3_PIN}
+};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

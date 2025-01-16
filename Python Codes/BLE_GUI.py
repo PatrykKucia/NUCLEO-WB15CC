@@ -84,8 +84,12 @@ image_label_LED_2 = tk.Label(root, image=LED_2_image)
 image_label_LED_2.grid(row=0, column=2, padx=(5, 10), pady=(10, 10), sticky='ne')  # Positioned to the right
 image_label_LED_3 = tk.Label(root, image=LED_3_image)
 image_label_LED_3.grid(row=0, column=3, padx=(5, 10), pady=(10, 10), sticky='ne')  # Positioned to the right
-image_label_LED_4 = tk.Label(root, image=LED_4_image)
-image_label_LED_4.grid(row=0, column=4, padx=(5, 10), pady=(10, 10), sticky='ne')  # Positioned to the right
+# image_label_LED_4 = tk.Label(root, image=LED_4_image)
+# image_label_LED_4.grid(row=0, column=4, padx=(5, 10), pady=(10, 10), sticky='ne')  # Positioned to the right
+
+LED_ON_images = [LED_ON_1_image, LED_ON_2_image, LED_ON_3_image]
+LED_OFF_images = [LED_1_image, LED_2_image, LED_3_image]
+image_label_list = [image_label_LED_1, image_label_LED_2, image_label_LED_3]
 
 # Functions for buttons
 def Connect():
@@ -94,27 +98,26 @@ def Connect():
 def Disconnect():
     asyncio.run_coroutine_threadsafe(disconnect_from_device(), loop)
 
-def LED_1_Toggle():
-    led_states[0] = not led_states[0]
-    image_label_LED_1.config(image=LED_ON_1_image if led_states[0] else LED_1_image)
-    update_status("LED 1 toggled to ON" if led_states[0] else "LED 1 toggled to OFF")
-    data_to_send = b"LED 1 ON"
-    asyncio.run(send_data_to_nucleo(data_to_send))
+# def LED_1_Toggle():
+#     led_states[0] = not led_states[0]
+#     image_label_LED_1.config(image=LED_ON_1_image if led_states[0] else LED_1_image)
+#     update_status("LED 1 toggled to ON" if led_states[0] else "LED 1 toggled to OFF")
+#     data_to_send = b"LED 1 ON"
 
-def LED_2_Toggle():
-    led_states[1] = not led_states[1]
-    image_label_LED_2.config(image=LED_ON_2_image if led_states[1] else LED_2_image)
-    update_status("LED 2 toggled to ON" if led_states[1] else "LED 2 toggled to OFF")
 
-def LED_3_Toggle():
-    led_states[2] = not led_states[2]
-    image_label_LED_3.config(image=LED_ON_3_image if led_states[2] else LED_3_image)
-    update_status("LED 3 toggled to ON" if led_states[2] else "LED 3 toggled to OFF")
-
-def LED_4_Toggle():
-    led_states[3] = not led_states[3]
-    image_label_LED_4.config(image=LED_ON_4_image if led_states[3] else LED_4_image)
-    update_status("LED 4 toggled to ON" if led_states[3] else "LED 4 toggled to OFF")
+def LED_Toggle(led_number):
+    if 1 <= led_number <= 3:
+        led_states[led_number - 1] = not led_states[led_number - 1]
+        image_label_list[led_number - 1].config(
+        image=LED_ON_images[led_number - 1] if led_states[led_number - 1] else LED_OFF_images[led_number - 1]
+        )
+        led_status = "ON" if led_states[led_number - 1] else "OFF"
+        update_status(f"LED {led_number} toggled to {led_status}")
+        data_to_send = bytearray(5)
+        data_to_send[led_number] = 1 if led_states[led_number - 1] else 0
+        asyncio.run(send_data_to_nucleo(data_to_send))
+    else:
+        update_status("Invalid LED number")
 
 # function to update status
 def update_status(message):
@@ -279,6 +282,15 @@ root.after(100, process_notifications) # Start processing notifications
 #         update_status("Asyncio loop is running fine.")
 #     root.after(5000, monitor_asyncio)  # Check every 5 seconds
 #root.after(5000, monitor_asyncio)
+# text status 
+# Area for status
+
+status_frame = ttk.LabelFrame(root, text="Status")
+status_frame.grid(row=2, column=0, columnspan=5, sticky="nsew", padx=10, pady=10)
+
+status_textbox = tk.Text(status_frame, wrap="word", height=5)
+status_textbox.pack(fill="both", expand=True, padx=5, pady=5)
+status_textbox.config(state="disabled")
 
 asyncio_thread = threading.Thread(target=start_asyncio_loop, daemon=True) 
 asyncio_thread.start()
@@ -309,30 +321,21 @@ Button_4_state = ttk.Label(button_frame, text="Button 4: OFF", font=('Helvetica'
 Button_4_state.grid(row=2, column=1, columnspan=1, pady=0)
 
 #Buttons under the images 
-button_LED_1 = ttk.Button(root, text="Control LED 1", command=LED_1_Toggle)
+button_LED_1 = ttk.Button(root, text="Control LED 1", command=lambda: LED_Toggle(1))#labda for passing arguments to function because normally it would be called immediately
 button_LED_1.grid(row=1, column=1, pady=(5, 10), padx=5, sticky='n')
 
-button_LED_2 = ttk.Button(root, text="Control LED 2", command=LED_2_Toggle)
+button_LED_2 = ttk.Button(root, text="Control LED 2", command=lambda: LED_Toggle(2))
 button_LED_2.grid(row=1, column=2, pady=(5, 10), padx=5, sticky='n')
 
-button_LED_3 = ttk.Button(root, text="Control LED 3", command=LED_3_Toggle)
+button_LED_3 = ttk.Button(root, text="Control LED 3", command=lambda: LED_Toggle(3))
 button_LED_3.grid(row=1, column=3, pady=(5, 10), padx=5, sticky='n')
 
-button_LED_4 = ttk.Button(root, text="Control LED 4", command=LED_4_Toggle)
-button_LED_4.grid(row=1, column=4, pady=(5, 10), padx=5, sticky='n')
-
-# Area for status
-status_frame = ttk.LabelFrame(root, text="Status")
-status_frame.grid(row=2, column=0, columnspan=5, sticky="nsew", padx=10, pady=10)
+# button_LED_4 = ttk.Button(root, text="Control LED 4", command=LED_Toggle(4))
+# button_LED_4.grid(row=1, column=4, pady=(5, 10), padx=5, sticky='n')
 
 # Area for BLE Data
 BLE_data_frame = ttk.LabelFrame(root, text="BLE Data")
 BLE_data_frame.grid(row=3, column=0, columnspan=5, sticky="nsew", padx=10, pady=10)
-
-# text status 
-status_textbox = tk.Text(status_frame, wrap="word", height=5)
-status_textbox.pack(fill="both", expand=True, padx=5, pady=5)
-status_textbox.config(state="disabled")
 
 # text ble data
 BLE_data_textbox = tk.Text(BLE_data_frame, wrap="word", height=5)

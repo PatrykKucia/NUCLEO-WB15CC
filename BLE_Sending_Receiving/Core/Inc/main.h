@@ -58,7 +58,12 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
+typedef struct {
+    GPIO_TypeDef* port;
+    uint16_t pin;
+} led_struct_t;
 
+extern led_struct_t LED[];
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/

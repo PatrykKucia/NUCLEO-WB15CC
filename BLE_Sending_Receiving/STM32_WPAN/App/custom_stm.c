@@ -39,7 +39,7 @@ typedef struct{
 
 extern uint16_t Connection_Handle;
 /* USER CODE BEGIN PTD */
-
+extern led_struct_t LED[];
 /* USER CODE END PTD */
 
 /* Private defines -----------------------------------------------------------*/
@@ -199,18 +199,14 @@ static SVCCTL_EvtAckStatus_t Custom_STM_Event_Handler(void *Event)
               printf("%02X ", bluetooth_data[i]); // Heksadecymalny format
             }
             printf("\n");
-            if(bluetooth_data[4]==1)
-            {
-            	HAL_GPIO_TogglePin(LED1_GPIO_PORT, LED1_PIN);
-            }
-            else if(bluetooth_data[4]==2)
-				{
-					HAL_GPIO_TogglePin(LED2_GPIO_PORT, LED2_PIN);
-				}
-            else if(bluetooth_data[4]==3)
-                {
-                	HAL_GPIO_TogglePin(LED3_GPIO_PORT, LED3_PIN);
+            for (uint8_t i = 1; i < 4; i++) {
+                if (attribute_modified->Attr_Data[i] == 1) { // Włącz LED
+                    HAL_GPIO_WritePin(LED[i-1].port, LED[i-1].pin, GPIO_PIN_SET);
+                } else if (attribute_modified->Attr_Data[i] == 0) { // Wyłącz LED
+                    HAL_GPIO_WritePin(LED[i-1].port, LED[i-1].pin, GPIO_PIN_RESET);
                 }
+            }
+
 
             /* USER CODE END CUSTOM_STM_Service_1_Char_1_ACI_GATT_ATTRIBUTE_MODIFIED_VSEVT_CODE */
           } /* if (attribute_modified->Attr_Handle == (CustomContext.CustomMycharwriteHdle + CHARACTERISTIC_VALUE_ATTRIBUTE_OFFSET))*/
